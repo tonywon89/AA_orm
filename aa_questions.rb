@@ -73,6 +73,29 @@ class User
     QuestionLike.liked_questions_for_user_id(@id)
   end
 
+  def save
+    if @id.nil?
+      QuestionsDatabase.instance.execute(<<-SQL, @fname, @lname)
+        INSERT INTO
+          users(fname, lname)
+        VALUES
+          (?, ?)
+      SQL
+      @id = QuestionsDatabase.instance.last_insert_row_id
+    else
+      QuestionsDatabase.instance.execute(<<-SQL, fname: @fname, lname: @lname, id: @id)
+        UPDATE
+          users
+        SET
+          fname = :fname,
+          lname = :lname
+        WHERE
+          id = :id
+      SQL
+    end
+    self
+  end
+
   def average_karma
     results = QuestionsDatabase.instance.execute(<<-SQL, @id)
       SELECT
