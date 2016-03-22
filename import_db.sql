@@ -41,6 +41,8 @@ CREATE TABLE replies (
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
+DROP TABLE IF EXISTS question_likes;
+
 CREATE TABLE question_likes (
   question_id INTEGER NOT NULL,
   user_id INTEGER NOT NULL,
@@ -58,7 +60,9 @@ INSERT INTO
   questions  (title, body, author_id)
 VALUES
   ('Math Question', 'What is one plus one?', (SELECT id FROM users WHERE fname = 'Tony')),
-  ('English Question', 'Wat?', (SELECT id FROM users WHERE fname = 'Tony'));
+  ('English Question', 'Wat?', (SELECT id FROM users WHERE fname = 'Tony')),
+  ('Science Question', 'What is science?', (SELECT id FROM users WHERE fname = 'Tony')),
+  ('Geography Question', 'Where am I?', (SELECT id FROM users WHERE fname = 'Eric'));
 
 INSERT INTO
   replies (body, question_id, parent_id, user_id)
