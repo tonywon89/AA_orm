@@ -175,7 +175,29 @@ class Question
     QuestionLike.most_liked_questions(n)
   end
 
-
+  def save
+    if @id.nil?
+      QuestionsDatabase.instance.execute(<<-SQL, title: @title, body: @body, author_id: @author_id)
+        INSERT INTO
+          questions(title, body, author_id)
+        VALUES
+          (:title, :body, :author_id)
+      SQL
+      @id = QuestionsDatabase.instance.last_insert_row_id
+    else
+      QuestionsDatabase.instance.execute(<<-SQL, title: @title, body: @body, author_id: @author_id, id: @id)
+        UPDATE
+          questions
+        SET
+          title = :title,
+          body = :body,
+          author_id = :author_id
+        WHERE
+          id = :id
+      SQL
+    end
+    self
+  end
 end
 
 class Reply
@@ -242,6 +264,35 @@ class Reply
     end
     children
   end
+
+  def save
+    options =  {body: @body, parent_id: @parent_id, question_id: @question_id, user_id: @user_id }
+    if @id.nil?
+      QuestionsDatabase.instance.execute(<<-SQL, options)
+        INSERT INTO
+          replies (body, parent_id, question_id, user_id)
+        VALUES
+          (:body, :parent_id, :question_id, :user_id)
+      SQL
+      @id = QuestionsDatabase.instance.last_insert_row_id
+    else
+      options = options.merge({id: @id})
+
+      QuestionsDatabase.instance.execute(<<-SQL, options)
+        UPDATE
+          replies
+        SET
+          body = :body,
+          parent_id = :parent_id,
+          question_id = :question_id,
+          user_id = :user_id
+        WHERE
+          id = :id
+      SQL
+    end
+    self
+  end
+
 end
 
 class QuestionFollow
