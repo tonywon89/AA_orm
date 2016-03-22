@@ -105,6 +105,10 @@ class Question
   def author
     User.find_by_id(@author_id)
   end
+
+  def replies
+    Reply.find_by_question_id(@id)
+  end
 end
 
 class Reply
@@ -142,6 +146,7 @@ class Reply
   end
 
   attr_accessor :body
+  attr_reader :id
 
   def initialize(options = {})
     @id = options['id']
@@ -149,5 +154,25 @@ class Reply
     @parent_id = options['parent_id']
     @question_id = options['question_id']
     @user_id = options['user_id']
+  end
+
+  def author
+    User.find_by_id(@user_id)
+  end
+
+  def question
+    Question.find_by_id(@question_id)
+  end
+
+  def parent_reply
+    Reply.find_by_id(@parent_id)
+  end
+
+  def child_replies
+    children = []
+    question.replies.each do |reply|
+      children << reply if !reply.parent_reply.is_a?(String) && reply.parent_reply.id == @id
+    end
+    children
   end
 end
