@@ -64,6 +64,10 @@ class User
   def authored_replies
     Reply.find_by_user_id(@id)
   end
+
+  def followed_questions
+    QuestionFollow.followed_questions_for_user_id(@id)
+  end
 end
 
 class Question
@@ -108,6 +112,10 @@ class Question
 
   def replies
     Reply.find_by_question_id(@id)
+  end
+
+  def followers
+    QuestionFollow.followers_for_question_id(@id)
   end
 end
 
@@ -175,4 +183,47 @@ class Reply
     end
     children
   end
+end
+
+class QuestionFollow
+  def self.all
+    results = QuestionsDatabase.instance.execute('SELECT * FROM question_follows')
+    results.map{ |result| QuestionFollow.new(result) }
+  end
+
+  def self.followers_for_question_id(question_id)
+    results = QuestionsDatabase.instance.execute(<<-SQL, question_id)
+      SELECT
+        *
+      FROM
+        question_follows
+      JOIN
+        users ON question_follows.user_id = users.id
+      WHERE
+        question_id = ?
+    SQL
+
+    results.map{ |result| User.find_by_id(result['user_id']) }
+  end
+
+  def self.followed_questions_for_user_id(user_id)
+    results = QuestionsDatabase.instance.execute(<<-SQL, user_id)
+      SELECT
+        *
+      FROM
+        question_follows
+      JOIN
+        questions ON question_follows.question_id = questions.id
+      WHERE
+        user_id = ?
+    SQL
+
+    results.map { |result| Question.find_by_id(result['question_id'])}
+  end
+
+  def initialize(options = {})
+    @question_id = options['question_id']
+    @user_id = options['user_id']
+  end
+
 end

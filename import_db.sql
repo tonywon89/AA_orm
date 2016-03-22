@@ -59,3 +59,8 @@ VALUES
    NULL, (SELECT id FROM users WHERE fname = 'Eric')),
   ('Thanks', (SELECT id FROM questions WHERE body = 'What is one plus one?'),
    1, (SELECT id FROM users WHERE fname = 'Tony'));
+
+INSERT INTO
+  question_follows (question_id, user_id)
+VALUES
+  (1,1), (1,2), (2,1);
