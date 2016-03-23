@@ -1,3 +1,4 @@
+require 'byebug'
 require 'singleton'
 require 'sqlite3'
 
@@ -13,25 +14,42 @@ class QuestionsDatabase < SQLite3::Database
   end
 end
 
-class User
-  def self.all
-    results = QuestionsDatabase.instance.execute('SELECT * FROM users')
-    results.map { |result| User.new(result) }
-  end
-
-  def self.find_by_id(id)
-    user = QuestionsDatabase.instance.execute(<<-SQL, id)
+class ModelBase
+  def self.all(table)
+    results = QuestionsDatabase.instance.execute(<<-SQL)
       SELECT
         *
       FROM
-        users
+        #{table}
+    SQL
+
+    results.map { |result| self.new(result) }
+  end
+
+  def self.find_by_id(table, id)
+    results = QuestionsDatabase.instance.execute(<<-SQL, id)
+      SELECT
+        *
+      FROM
+        #{table}
       WHERE
         id = ?
     SQL
 
-    return "User not found" if user.empty?
+    return "Not found" if results.empty?
 
-    User.new(user.first)
+    self.new(results.first)
+  end
+
+end
+
+class User < ModelBase
+  def self.all
+    super('users')
+  end
+
+  def self.find_by_id(id)
+    super('users', id)
   end
 
   def self.find_by_name(fname, lname)
@@ -111,25 +129,13 @@ class User
   end
 end
 
-class Question
+class Question < ModelBase
   def self.all
-    results = QuestionsDatabase.instance.execute('SELECT * FROM questions')
-    results.map { |result| Question.new(result) }
+    super('questions')
   end
 
   def self.find_by_id(id)
-    question = QuestionsDatabase.instance.execute(<<-SQL, id)
-      SELECT
-        *
-      FROM
-        questions
-      WHERE
-        id = ?
-    SQL
-
-    return "Question not found" if question.empty?
-
-    Question.new(question.first)
+    super('questions', id)
   end
 
   def self.find_by_author_id(author_id)
@@ -200,26 +206,14 @@ class Question
   end
 end
 
-class Reply
+class Reply < ModelBase
   def self.all
-    results = QuestionsDatabase.instance.execute('SELECT * FROM replies')
-    results.map { |result| Reply.new(result) }
+    super('replies')
   end
 
 
   def self.find_by_id(id)
-    reply = QuestionsDatabase.instance.execute(<<-SQL, id)
-      SELECT
-        *
-      FROM
-        replies
-      WHERE
-        id = ?
-    SQL
-
-    return "Reply not found" if reply.empty?
-
-    Reply.new(reply.first)
+    super('replies', id)
   end
 
   def self.find_by_user_id(user_id)
